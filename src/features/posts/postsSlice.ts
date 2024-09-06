@@ -2,7 +2,7 @@ import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
 import {sub} from 'date-fns';
 import { RootState } from "../../app/store";
 
-interface IPost {
+export interface IPost {
   id: string
   title: string 
   content: string
