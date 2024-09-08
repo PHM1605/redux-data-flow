@@ -1,28 +1,40 @@
 import { MouseEvent, ChangeEvent, useState } from "react"
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { postAdded } from "./postsSlice";
 import { selectAllUsers } from "../users/usersSlice";
+import { addNewPost } from "./postsSlice";
+import { useNavigate } from "react-router-dom";
 
 const AddPostForm = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [userId, setUserId] = useState("");
+  const [addRequestStatus, setAddRequestStatus] = useState('idle');
+
   const users = useAppSelector(selectAllUsers);
-  const canSave = Boolean(title) && Boolean(content) && Boolean(userId);
+  const canSave = [title, content, userId].every(Boolean) && addRequestStatus === 'idle';
 
   const onTitleChanged = (e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
   const onContentChanged = (e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value);
   const onAuthorChanged = (e: ChangeEvent<HTMLSelectElement>) => setUserId(e.target.value);
 
+
   const onSavePostClicked = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    if (title && content) {
-      dispatch(
-        postAdded(title, content, userId)
-      )
-      setTitle('')
-      setContent('');
+    if (canSave) {
+      try {
+        setAddRequestStatus('pending')
+        dispatch(addNewPost({title, body: content, userId})).unwrap() // unwrap() raises an error if something unusual happens
+        setTitle('');
+        setContent('');
+        setUserId('');
+        navigate('/')
+      } catch (err) {
+        console.error('Failed to save the post', err);
+      } finally {
+        setAddRequestStatus('idle')
+      }
     }
   }
 
